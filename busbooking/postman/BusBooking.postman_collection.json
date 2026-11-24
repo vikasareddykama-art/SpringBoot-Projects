@@ -1,0 +1,590 @@
+{
+  "info": {
+    "name": "Bus Travel Booking Management System",
+    "description": "Run the whole collection with the Collection Runner. Requests 1-15 run in order and clean up after themselves.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080/api/v1/bus-bookings"
+    },
+    {
+      "key": "bookingId",
+      "value": ""
+    },
+    {
+      "key": "seat",
+      "value": ""
+    },
+    {
+      "key": "futureDate",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Add booking (201)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": []
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"passengerName\": \"Postman Tester\",\n  \"busNumber\": \"PM-01-0001\",\n  \"source\": \"Mysore\",\n  \"destination\": \"Bangalore\",\n  \"travelDate\": \"{{futureDate}}\",\n  \"seatNumber\": {{seat}},\n  \"ticketFare\": 275.5\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "// Future date (10 days ahead) and a seat number that changes on every run",
+              "pm.collectionVariables.set('futureDate', new Date(Date.now() + 10*86400000).toISOString().slice(0,10));",
+              "if (!pm.collectionVariables.get('seat')) { pm.collectionVariables.set('seat', (Date.now() % 50) + 1); }"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status is 201', function () { pm.response.to.have.status(201); });",
+              "var b = pm.response.json();",
+              "pm.test('Booking ID generated', function () { pm.expect(b.bookingId).to.be.a('number'); });",
+              "pm.collectionVariables.set('bookingId', b.bookingId);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Add duplicate seat (400)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": []
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"passengerName\": \"Postman Tester\",\n  \"busNumber\": \"PM-01-0001\",\n  \"source\": \"Mysore\",\n  \"destination\": \"Bangalore\",\n  \"travelDate\": \"{{futureDate}}\",\n  \"seatNumber\": {{seat}},\n  \"ticketFare\": 275.5\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "// Future date (10 days ahead) and a seat number that changes on every run",
+              "pm.collectionVariables.set('futureDate', new Date(Date.now() + 10*86400000).toISOString().slice(0,10));",
+              "if (!pm.collectionVariables.get('seat')) { pm.collectionVariables.set('seat', (Date.now() % 50) + 1); }"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status is 400', function () { pm.response.to.have.status(400); });",
+              "pm.test('Message mentions seat', function () { pm.expect(pm.response.json().message).to.include('already booked'); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Display all bookings (200)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": []
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
+              "pm.test('Body is an array', function () { pm.expect(pm.response.json()).to.be.an('array'); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Get booking by ID (200)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/{{bookingId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "{{bookingId}}"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status is 200', function () { pm.response.to.have.status(200); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Update booking (200)",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/{{bookingId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "{{bookingId}}"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"passengerName\": \"Postman Tester Updated\",\n  \"busNumber\": \"PM-01-0001\",\n  \"source\": \"Mysore\",\n  \"destination\": \"Bangalore\",\n  \"travelDate\": \"{{futureDate}}\",\n  \"seatNumber\": {{seat}},\n  \"ticketFare\": 300.0\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "// Future date (10 days ahead) and a seat number that changes on every run",
+              "pm.collectionVariables.set('futureDate', new Date(Date.now() + 10*86400000).toISOString().slice(0,10));",
+              "if (!pm.collectionVariables.get('seat')) { pm.collectionVariables.set('seat', (Date.now() % 50) + 1); }"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
+              "pm.test('Name updated', function () { pm.expect(pm.response.json().passengerName).to.eql('Postman Tester Updated'); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. Route report (200)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/reports/route?source=Mysore&dest=Bangalore",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "reports",
+            "route"
+          ],
+          "query": [
+            {
+              "key": "source",
+              "value": "Mysore"
+            },
+            {
+              "key": "dest",
+              "value": "Bangalore"
+            }
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status is 200', function () { pm.response.to.have.status(200); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "7. Travel date report (200)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/reports/date?travelDate={{futureDate}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "reports",
+            "date"
+          ],
+          "query": [
+            {
+              "key": "travelDate",
+              "value": "{{futureDate}}"
+            }
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "// Future date (10 days ahead) and a seat number that changes on every run",
+              "pm.collectionVariables.set('futureDate', new Date(Date.now() + 10*86400000).toISOString().slice(0,10));",
+              "if (!pm.collectionVariables.get('seat')) { pm.collectionVariables.set('seat', (Date.now() % 50) + 1); }"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status is 200', function () { pm.response.to.have.status(200); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "8. Passenger report (200)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/reports/passenger?passengerName=Rahul",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "reports",
+            "passenger"
+          ],
+          "query": [
+            {
+              "key": "passengerName",
+              "value": "Rahul"
+            }
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status is 200', function () { pm.response.to.have.status(200); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "9. Invalid: source equals destination (400)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": []
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"passengerName\": \"Postman Tester\",\n  \"busNumber\": \"PM-01-0001\",\n  \"source\": \"Mysore\",\n  \"destination\": \"Mysore\",\n  \"travelDate\": \"{{futureDate}}\",\n  \"seatNumber\": 2,\n  \"ticketFare\": 275.5\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "// Future date (10 days ahead) and a seat number that changes on every run",
+              "pm.collectionVariables.set('futureDate', new Date(Date.now() + 10*86400000).toISOString().slice(0,10));",
+              "if (!pm.collectionVariables.get('seat')) { pm.collectionVariables.set('seat', (Date.now() % 50) + 1); }"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status is 400', function () { pm.response.to.have.status(400); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "10. Invalid: seat 51 (400)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": []
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"passengerName\": \"Postman Tester\",\n  \"busNumber\": \"PM-01-0001\",\n  \"source\": \"Mysore\",\n  \"destination\": \"Bangalore\",\n  \"travelDate\": \"{{futureDate}}\",\n  \"seatNumber\": 51,\n  \"ticketFare\": 275.5\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "// Future date (10 days ahead) and a seat number that changes on every run",
+              "pm.collectionVariables.set('futureDate', new Date(Date.now() + 10*86400000).toISOString().slice(0,10));",
+              "if (!pm.collectionVariables.get('seat')) { pm.collectionVariables.set('seat', (Date.now() % 50) + 1); }"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status is 400', function () { pm.response.to.have.status(400); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "11. Invalid: past travel date (400)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": []
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"passengerName\": \"Postman Tester\",\n  \"busNumber\": \"PM-01-0001\",\n  \"source\": \"Mysore\",\n  \"destination\": \"Bangalore\",\n  \"travelDate\": \"2020-01-01\",\n  \"seatNumber\": 3,\n  \"ticketFare\": 275.5\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status is 400', function () { pm.response.to.have.status(400); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "12. Invalid: fare zero (400)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": []
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"passengerName\": \"Postman Tester\",\n  \"busNumber\": \"PM-01-0001\",\n  \"source\": \"Mysore\",\n  \"destination\": \"Bangalore\",\n  \"travelDate\": \"{{futureDate}}\",\n  \"seatNumber\": 4,\n  \"ticketFare\": 0\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "// Future date (10 days ahead) and a seat number that changes on every run",
+              "pm.collectionVariables.set('futureDate', new Date(Date.now() + 10*86400000).toISOString().slice(0,10));",
+              "if (!pm.collectionVariables.get('seat')) { pm.collectionVariables.set('seat', (Date.now() % 50) + 1); }"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status is 400', function () { pm.response.to.have.status(400); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "13. Get missing booking (404)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/999999",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "999999"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status is 404', function () { pm.response.to.have.status(404); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "14. Cancel booking (204)",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/{{bookingId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "{{bookingId}}"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status is 204', function () { pm.response.to.have.status(204); });",
+              "pm.test('Body is empty', function () { pm.expect(pm.response.text()).to.eql(''); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "15. Get cancelled booking (404)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/{{bookingId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "{{bookingId}}"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status is 404', function () { pm.response.to.have.status(404); });"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

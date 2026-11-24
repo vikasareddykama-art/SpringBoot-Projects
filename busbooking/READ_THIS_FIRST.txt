@@ -1,0 +1,15 @@
+READ THIS FIRST (Gmail-safe copy)
+================================
+Gmail blocks any attachment that contains a .js file, even inside a zip.
+So the JavaScript file was renamed to keep this zip deliverable:
+
+    src/main/resources/static/js/app.js.txt
+
+After unzipping, rename it back to:
+
+    src/main/resources/static/js/app.js
+
+(Windows: right-click > Rename and delete the ".txt". If extensions are hidden,
+turn on View > File name extensions in File Explorer first.)
+
+Nothing else was changed. The full instructions are in README.md.
